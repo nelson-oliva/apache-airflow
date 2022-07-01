@@ -36,7 +36,6 @@ def create_rbac_role_with_permissions(
     menu_permissions = make_permissions(menu, ["View Menus", "Browse", "Docs", "Documentation", "SLA Misses", "Jobs", \
                                                "DAG Runs", "Audit Logs", "Task Instances", "DAG Dependencies"])
 
-    # permissions += read_permissions + edit_permissions + create_permissions + delete_permissions + menu_permissions
     if "read" in privileges:
         permissions += read_permissions
     if "edit" in privileges:
@@ -68,9 +67,10 @@ def create_rbac_role_with_permissions(
         ],
         "name": new_role_name
     }
-
+    print("Data:" + str(data))
     airflow_url += "/api/v1/roles"
     response = requests.post(airflow_url, json=data, headers=headers)
+    print("Headers:" + str(headers))
 
     if response.status_code == 403:
         raise PermissionError(
@@ -82,6 +82,8 @@ def create_rbac_role_with_permissions(
         print("Role with name {} already exist. Role will be updated".format(new_role_name))
         airflow_url += "/" + new_role_name
         response = requests.patch(airflow_url, json=data, headers=headers)
+        print("Response:" + str(response))
+        print("data:" + str(data))
         if response.status_code == 200:
             print(f"Role `{new_role_name}` successfuly updated.")
         else:
