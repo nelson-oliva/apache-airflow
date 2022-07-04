@@ -71,13 +71,19 @@ users create -- \
 
 ## POC Scenario Explanation
 
+There are some requirements to work in a single Cloud Composer instance, where there are multiple teams of Data Engineers, then it is necessary to meet the following conditions.
+
+**Requirements:**
+1. Give view and execution access only to Dags where each Data Engineering team has ownership. 
+2. Provide view access to Dags to some Data Engineering teams that depend on some processes where they don't have ownership. Just to check the execution status.
+
 Two DAGS will be used in this POC:
 - <b><u>DAG-AZ</u></b>: a Bash Airflow Operator that prints a "Hello World! This is DAG-AZ".
 - <b><u>DAG-BX</u></b>: a Bash Airflow Operator that prints a "Hello World! This is DAG-BX".
 
 We will be creating two <u>roles</u>:
-- <b><u>Role-A</u></b>: which can just <b>view</b> and also <b>execute</b> **DAG-AZ** (Scenario 1).
-- <b><u>Role-B</u></b>: which can <b>view</b> and also <b>execute</b> **DAG-BX**. This role will be able to also <b>view</b> (just view) **DAG-AZ** (Scenario 2).
+- <b><u>Role-A</u></b>: which can just <b>view</b> and also <b>execute</b> **DAG-AZ** (Requirement 1).
+- <b><u>Role-B</u></b>: which can <b>view</b> and also <b>execute</b> **DAG-BX** (Requirement 1). This role will be able to also <b>view</b> (just view) **DAG-AZ** (Requirement 2).
 
 After having created the two DAGS and ROLES, we will be assigning these ROLES to different users to see the security restrictions applied at the DAG and UI level in action.
 
