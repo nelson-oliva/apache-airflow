@@ -24,6 +24,7 @@ export ENVIRONMENT_SIZE=small
 export ENVIRONMENT_NAME=env-1
 export ADMIN_USER=noliva.academy1@gmail.com
 export GROUP_A_USER=nelson.o.valenzuela@gmail.com
+export GROUP_B_USER=n3lsok@gmail.com
 
 gcloud projects add-iam-policy-binding ${PROJECT} \
 --member serviceAccount:service-${PROJECT_NUMBER}@cloudcomposer-accounts.iam.gserviceaccount.com \
@@ -90,7 +91,7 @@ git clone https://github.com/nelson-oliva/apache-airflow.git
 In order to upload the DAGS to the Cloud Composer DAGS folder, please execute the following command. Please first replace the <u>composer-environment-name</u> tag with the Cloud Composer environment name.
 
 ```bash
-export DAGS_PATH="/Users/nelson.oliva/Develop/apache-airflow/rbac-poc/dags"
+export DAGS_PATH="/Users/<User>/Develop/apache-airflow/rbac-poc/dags"
 gcloud composer environments storage dags import \
 --environment ${ENVIRONMENT_NAME} \
 --location ${LOCATION} \
@@ -116,22 +117,23 @@ pip install -r roles-creation-python-script/requirements.txt
 
 ## RBAC role creation and user binding
 
-### Scenario 1
+### Requirement 1
 
-By executing the command below we will be creating a role called <b>Group-A-Op</b> which will provide users having it with 
-<b><u>read</u></b> and <b><u>edit</u></b> permissions on the DAGs specified in the DAG list. In this case, DAG-A.
+By executing the command below we will be creating a role called <b>Role-A</b> which will provide users having it with 
+<b><u>read</u></b>,<b><u>edit</u></b>,<b><u>create</u></b>,<b><u>delete</u></b> and <b><u>menu</u></b> permissions on 
+the DAGs specified in the DAG list. In this case, DAG-AZ.
 
 ```bash
-AIRFLOW_URL=$(echo $(gcloud composer environments describe ${ENVIRONMENT_NAME} \
+export AIRFLOW_URL=$(echo $(gcloud composer environments describe ${ENVIRONMENT_NAME} \
 --location ${LOCATION} \
 --project ${PROJECT} | grep airflowUri | awk '{ print $2}'))
-ROLE_NAME="Role-A"
-DAG_LIST="DAG-AZ"
-TOKEN=$(echo $(gcloud auth print-access-token))
-PRIVILEGES="read edit"
+export ROLE_NAME="Role-A"
+export DAG_LIST="DAG-AZ"
+export TOKEN=$(echo $(gcloud auth print-access-token))
+export PRIVILEGES=("read" "edit" "create" "delete" "menu")
+export SCRIPT_PATH="/Users/<User>/Develop/apache-airflow/rbac-poc/roles-creation-python-script/airflow_rbac_roles.py"
 
-python3 /Users/nelson.oliva/Develop/apache-airflow/rbac-poc/roles-creation-python-script/airflow_rbac_roles.py \
--u ${AIRFLOW_URL} -r ${ROLE_NAME} -t ${TOKEN} -d ${DAG_LIST} -p ${PRIVILEGES}
+python $SCRIPT_PATH -u "$AIRFLOW_URL" -r "${ROLE_NAME}" -t "${TOKEN}" -d "${DAG_LIST}" -p "${PRIVILEGES[@]}"
 ```
 
 Now, let's create a new user in Apache Airflow and grant the role.
@@ -151,9 +153,8 @@ users create -- \
 
 The result in Cloud Composer should be the one depicted below, having DAG-A greyed out (only able to read/view):
 
-![Scenario 1](images/dag-a.png)
+![Scenario 1](images/dag-az.png)
 
-### Scenario 2
 
 By executing the command below we will be creating a role called <b>Consumers-Group-B</b> which will provide users having it with <b><u>read and execute</u></b> permissions on the DAGs specified in the DAG list. In this case, DAG-B.
 
@@ -187,25 +188,25 @@ users create -- \
 
 The result in Cloud Composer should be the one depicted below, having DAG-B enabled, being able to read and execute:
 
-![Scenario 2](images/dag-b.png)
+![Scenario 2](images/dag-bx.png)
 
-### Scenario 3
+### Requirement 2
 
-Now, we will be <u>updating</u> the <b>Consumers-Group-B</b> by running the command again with the changes specified below. We will now specify DAG-A in the DAG list, and we will only provide <b><u>read</u></b> permissions for this specific DAG.
+Now, we will be <u>updating</u> the <b>Role-B</b> by running the command again with the changes specified below. We will now specify DAG-AZ in the DAG list, and we will only provide <b><u>read</u></b> permissions for this specific DAG.
 
 ```bash
-airflow_url=$(echo $(gcloud composer environments describe ${ENVIRONMENT} \
+export AIRFLOW_URL=$(echo $(gcloud composer environments describe ${ENVIRONMENT_NAME} \
 --location ${LOCATION} \
 --project ${PROJECT} | grep airflowUri | awk '{ print $2}'))
-role_name="Consumers-Group-B"
-dag_list="DAG-A"
-token=$(echo $(gcloud auth print-access-token))
-privileges="read"
+export ROLE_NAME="Role-B"
+export DAG_LIST="DAG-AZ"
+export TOKEN=$(echo $(gcloud auth print-access-token))
+export PRIVILEGES=("read")
+export SCRIPT_PATH="/Users/nelson.oliva/Develop/apache-airflow/rbac-poc/roles-creation-python-script/airflow_rbac_roles.py"
+python ${SCRIPT_PATH} -u ${AIRFLOW_URL} -r ${ROLE_NAME} -t ${TOKEN} -d ${DAG_LIST} -p ${PRIVILEGES[@]}
 
-python3 /home/${USER}/rbac-airflow/roles-creation-python-script/airflow_rbac_roles.py \
--u $airflow_url -r $role_name -t $token -d $dag_list -p $privileges
 ```
 
-The result in Cloud Composer should be the one depicted below, having DAG-A greyed out (only able to read/view), and having DAG-B enabled, being able to read and execute:
+The result in Cloud Composer should be the one depicted below, having DAG-AZ greyed out (only able to read/view), and having DAG-BX enabled, being able to read and execute:
 
-![Scenario 3](images/dag-a-b.png)
+![Scenario 3](images/dag-az-bx.png)

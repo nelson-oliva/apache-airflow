@@ -67,10 +67,8 @@ def create_rbac_role_with_permissions(
         ],
         "name": new_role_name
     }
-    print("Data:" + str(data))
     airflow_url += "/api/v1/roles"
     response = requests.post(airflow_url, json=data, headers=headers)
-    print("Headers:" + str(headers))
 
     if response.status_code == 403:
         raise PermissionError(
@@ -83,7 +81,6 @@ def create_rbac_role_with_permissions(
         airflow_url += "/" + new_role_name
         response = requests.patch(airflow_url, json=data, headers=headers)
         print("Response:" + str(response))
-        print("data:" + str(data))
         if response.status_code == 200:
             print(f"Role `{new_role_name}` successfuly updated.")
         else:
